@@ -2,6 +2,12 @@
  * Background service worker for managing theme updates
  */
 
+// Configuration constants
+const THEME_UPDATE_DELAY = 500; // ms to wait before updating theme
+const INITIAL_LOAD_DELAY = 1000; // ms to wait on initial load
+const TOOLBAR_DARKEN_FACTOR = 0.1;
+const FRAME_LIGHTEN_FACTOR = 0.05;
+
 // Store for current theme state
 let isEnabled = true;
 
@@ -18,10 +24,10 @@ async function applyTheme(color) {
   const textColor = getTextColor(r, g, b);
   
   // Create darker variant for toolbar
-  const toolbarColor = darkenColor(r, g, b, 0.1);
+  const toolbarColor = darkenColor(r, g, b, TOOLBAR_DARKEN_FACTOR);
   
   // Create lighter variant for frame
-  const frameColor = lightenColor(r, g, b, 0.05);
+  const frameColor = lightenColor(r, g, b, FRAME_LIGHTEN_FACTOR);
   
   const theme = {
     colors: {
@@ -122,13 +128,13 @@ async function updateThemeForTab(tabId) {
 // Listen for tab updates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'complete' && tab.active) {
-    setTimeout(() => updateThemeForTab(tabId), 500);
+    setTimeout(() => updateThemeForTab(tabId), THEME_UPDATE_DELAY);
   }
 });
 
 // Listen for tab activation
 chrome.tabs.onActivated.addListener((activeInfo) => {
-  setTimeout(() => updateThemeForTab(activeInfo.tabId), 500);
+  setTimeout(() => updateThemeForTab(activeInfo.tabId), THEME_UPDATE_DELAY);
 });
 
 // Listen for messages from content script
@@ -160,6 +166,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 // Initialize with current tab
 chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
   if (tabs[0]) {
-    setTimeout(() => updateThemeForTab(tabs[0].id), 1000);
+    setTimeout(() => updateThemeForTab(tabs[0].id), INITIAL_LOAD_DELAY);
   }
 });

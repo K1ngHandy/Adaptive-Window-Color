@@ -2,6 +2,13 @@
  * Color utility functions for the extension
  */
 
+// Configuration constants
+const CONTRAST_THRESHOLD_GOOD = 4.5; // WCAG AA standard for normal text
+const LIGHTNESS_ADJUSTMENT_DARK = 40;
+const LIGHTNESS_ADJUSTMENT_LIGHT = 40;
+const MIN_LIGHTNESS_DARK = 20;
+const MAX_LIGHTNESS_LIGHT = 80;
+
 /**
  * Converts RGB to HSL
  * @param {number} r - Red (0-255)
@@ -80,13 +87,13 @@ export function ensureTextContrast(r, g, b) {
   const whiteContrast = getContrastRatio(whiteLuminance, luminance);
   const blackContrast = getContrastRatio(luminance, blackLuminance);
   
-  // If contrast with white is good (> 4.5), use original color
-  if (whiteContrast >= 4.5) {
+  // If contrast with white is good (> WCAG AA threshold), use original color
+  if (whiteContrast >= CONTRAST_THRESHOLD_GOOD) {
     return { r, g, b, textColor: '#FFFFFF' };
   }
   
   // If contrast with black is good, use original color
-  if (blackContrast >= 4.5) {
+  if (blackContrast >= CONTRAST_THRESHOLD_GOOD) {
     return { r, g, b, textColor: '#000000' };
   }
   
@@ -95,10 +102,10 @@ export function ensureTextContrast(r, g, b) {
   
   // Make it darker if originally light, lighter if originally dark
   if (hsl.l > 50) {
-    hsl.l = Math.max(20, hsl.l - 40);
+    hsl.l = Math.max(MIN_LIGHTNESS_DARK, hsl.l - LIGHTNESS_ADJUSTMENT_DARK);
     return { ...hslToRgb(hsl.h, hsl.s, hsl.l), textColor: '#FFFFFF' };
   } else {
-    hsl.l = Math.min(80, hsl.l + 40);
+    hsl.l = Math.min(MAX_LIGHTNESS_LIGHT, hsl.l + LIGHTNESS_ADJUSTMENT_LIGHT);
     return { ...hslToRgb(hsl.h, hsl.s, hsl.l), textColor: '#000000' };
   }
 }
